@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shiny Frame Calculator · Pokémon Emerald</title>
+  <meta name="description" content="Find shiny frames for Pokémon Emerald from your TID and SID, then hit them with a soft-reset timer that has audio and visual cues.">
+  <meta name="author" content="Thiago Souza">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1><span class="sparkle" aria-hidden="true">✨</span> Shiny Frame Calculator</h1>
+      <p class="tagline">For Pokémon Emerald. Enter your Trainer ID and Secret ID, pick a shiny frame, and the timer tells you exactly when to press A.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <section class="card intro">
+      <h2>How it works</h2>
+      <p>
+        Emerald's random number generator starts from the same seed every time the game is turned on, then advances once per frame
+        (about 59.73 times a second). Each frame therefore always produces the same Pokémon. Whether that Pokémon is shiny depends only
+        on its PID and on your <strong>TID</strong> and <strong>SID</strong>, so with those two numbers you can list every shiny frame
+        ahead of time and then time your encounter to land on one of them.
+      </p>
+      <ol class="steps">
+        <li><strong>Find your frames:</strong> enter your TID and SID below and pick a shiny frame you like (nature and IVs are shown).</li>
+        <li><strong>Save in front of the Pokémon</strong>, for example Kyogre, Groudon, Rayquaza or a Regi, so that one press of A starts the encounter.</li>
+        <li><strong>Start the timer.</strong> When the first beep plays, soft reset (<kbd>Start</kbd> + <kbd>Select</kbd> + <kbd>A</kbd> + <kbd>B</kbd>).</li>
+        <li><strong>Load your save and stand ready in front of the Pokémon.</strong> In the last 5 seconds a dot runs along a timeline and ticks every second. Press A on the final beep.</li>
+        <li><strong>Calibrate:</strong> if it isn't shiny, find which frame you actually got and let the tool adjust the timer for your next try.</li>
+      </ol>
+    </section>
+
+    <!-- STEP 1 -->
+    <section class="card" id="calc">
+      <h2><span class="num">1</span> Find your shiny frames</h2>
+
+      <form id="calc-form" class="grid" autocomplete="off">
+        <label>Trainer ID (TID)
+          <input id="tid" type="text" inputmode="numeric" required placeholder="e.g. 29809" spellcheck="false">
+          <small>The ID No. on your trainer card.</small>
+        </label>
+        <label>Secret ID (SID)
+          <input id="sid" type="text" required placeholder="e.g. 1894 or 0x0766" spellcheck="false">
+          <small>Not shown in game. Decimal, or hex like <code>0x0766</code>.</small>
+        </label>
+        <label>Method
+          <select id="method">
+            <option value="1" selected>Method 1 (stationary)</option>
+            <option value="2">Method 2</option>
+            <option value="4">Method 4</option>
+          </select>
+          <small>Method 1 covers legendaries, starters and gifts.</small>
+        </label>
+        <label>Nature
+          <select id="nature"><option value="-1">Any nature</option></select>
+          <small>Only show shiny frames with this nature.</small>
+        </label>
+        <label>From frame
+          <input id="min-adv" type="number" min="0" value="0">
+        </label>
+        <label>To frame
+          <input id="max-adv" type="number" min="1" value="200000">
+          <small>200,000 frames ≈ 56 minutes after boot.</small>
+        </label>
+
+        <details class="advanced span-all">
+          <summary>Advanced</summary>
+          <div class="grid">
+            <label>Initial seed (hex)
+              <input id="seed" type="text" value="0" spellcheck="false">
+              <small>Emerald always starts at <code>0</code>. Ruby/Sapphire with a dry internal battery: <code>5A0</code>.</small>
+            </label>
+          </div>
+        </details>
+
+        <div class="span-all actions">
+          <button type="submit" class="primary">Find shiny frames</button>
+          <span id="tsv" class="muted"></span>
+        </div>
+      </form>
+
+      <p id="calc-msg" class="msg" role="status"></p>
+      <div class="table-wrap" id="results-wrap" hidden>
+        <table id="results">
+          <thead>
+            <tr><th>Frame</th><th>Time after boot</th><th>Nature</th><th>IVs <small>HP/Atk/Def/SpA/SpD/Spe</small></th><th>Ability</th><th>PID</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="card" id="timer">
+      <h2><span class="num">2</span> Timer</h2>
+
+      <div class="grid">
+        <label>Target frame
+          <input id="target" type="number" min="0" placeholder="Pick one from the list above">
+        </label>
+        <label>Soft-reset countdown (seconds)
+          <input id="pre" type="number" min="0" max="120" step="1" value="10">
+          <small>Soft reset when this countdown ends.</small>
+        </label>
+        <label>Calibration (frames)
+          <input id="cal" type="number" step="1" value="0">
+          <small>Adjusted automatically in step 3.</small>
+        </label>
+        <label>Volume
+          <input id="volume" type="range" min="0" max="1" step="0.05" value="0.6">
+          <button type="button" id="test-sound" class="ghost small">Test sound</button>
+        </label>
+      </div>
+
+      <div class="timer-box" id="timer-box" data-phase="idle">
+        <div class="phase" id="phase-label">Ready</div>
+        <div class="clock" id="clock">0:00.0</div>
+        <div class="hint" id="phase-hint">Pick a target frame, then press Start.</div>
+
+        <div class="timeline" id="timeline" aria-hidden="true">
+          <div class="track"></div>
+          <div class="mark" style="left:0%"><span>5</span></div>
+          <div class="mark" style="left:20%" data-k="4"><span>4</span></div>
+          <div class="mark" style="left:40%" data-k="3"><span>3</span></div>
+          <div class="mark" style="left:60%" data-k="2"><span>2</span></div>
+          <div class="mark" style="left:80%" data-k="1"><span>1</span></div>
+          <div class="mark final" style="left:100%" data-k="0"><span>A</span></div>
+          <div class="dot" id="dot"></div>
+        </div>
+
+        <div class="timer-actions">
+          <button type="button" id="start" class="primary big">Start</button>
+          <button type="button" id="stop" class="ghost big" disabled>Stop</button>
+        </div>
+        <p class="muted center small-text">Keyboard: <kbd>Space</kbd> starts or stops the timer (when you're not typing in a field).</p>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="card" id="calibrate">
+      <h2><span class="num">3</span> Missed it? Calibrate</h2>
+      <p>
+        Nobody hits the exact frame on the first try. The game needs some time between your A press and the moment the Pokémon is
+        generated, and that delay differs between consoles and emulators. Catch or check the Pokémon you got, compare its
+        <strong>nature</strong> and stats with the frames around your target below, and click the matching row.
+        An online IV calculator helps if several frames have the same nature.
+      </p>
+      <div class="grid">
+        <label>Frame you actually hit
+          <input id="hit" type="number" min="0">
+        </label>
+        <label>Show frames around target (±)
+          <input id="near-range" type="number" min="5" max="500" value="40">
+        </label>
+        <div class="actions span-all">
+          <button type="button" id="show-near" class="ghost">Show nearby frames</button>
+          <button type="button" id="apply-cal" class="primary">Update calibration</button>
+        </div>
+      </div>
+      <p id="cal-msg" class="msg" role="status"></p>
+      <div class="table-wrap" id="near-wrap" hidden>
+        <table id="near">
+          <thead>
+            <tr><th>Frame</th><th>Offset</th><th>Nature</th><th>IVs <small>HP/Atk/Def/SpA/SpD/Spe</small></th><th>Shiny</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card guide">
+      <h2>Tips &amp; FAQ</h2>
+      <dl>
+        <dt>Which Pokémon does this work for?</dt>
+        <dd>
+          Stationary and gift encounters that use Method 1, which covers Kyogre, Groudon, Rayquaza, Regirock, Regice, Registeel, the
+          Hoenn starters and gift Pokémon. Event-island Pokémon (Mew, Deoxys, Lugia, Ho-Oh) work the same way if you have the tickets.
+          <strong>Wild encounters are not supported</strong> because they use a different method ("Method H") that also depends on the
+          encounter slot. Roaming Latias/Latios are decided when the roamer is created, not when you meet it.
+        </dd>
+
+        <dt>Where do I get my SID?</dt>
+        <dd>
+          The game never shows it. If you already used RNG manipulation for your starter, you probably wrote it down. Otherwise you can
+          work it out from a Pokémon you caught, for example with <a href="https://github.com/Admiral-Fish/PokeFinder" target="_blank" rel="noopener">PokeFinder</a>'s
+          ID tools, or read it with an emulator. The SID never changes for a save file, so you only need to find it once.
+        </dd>
+
+        <dt>Why does the timer start before the game?</dt>
+        <dd>
+          The frame count starts when the game boots, which is the moment you soft reset. The first countdown lines up your reset with
+          the timer, and the second one counts the frames from there to your target.
+        </dd>
+
+        <dt>Which frame should I pick?</dt>
+        <dd>
+          Pick one that leaves you enough time to load the save, walk to the Pokémon and get ready: usually at least 30 to 60 seconds after boot.
+          Very long waits are fine too, the timer is just as accurate, but a mistake costs you more time.
+        </dd>
+
+        <dt>Console or emulator?</dt>
+        <dd>
+          Both work. The timer assumes the GBA's real frame rate (59.7275 fps). Emulators running at accurate speed behave the same.
+          Turn off fast-forward and frame skipping. On real hardware, the GBA, GBA SP, DS and DS Lite all work.
+        </dd>
+
+        <dt>The sound is late or out of sync</dt>
+        <dd>
+          Bluetooth headphones and speakers add a noticeable delay. Use your device's speaker or wired headphones. A constant delay is
+          absorbed by calibration anyway, so the important thing is that it stays the same between tries. Keep this tab in the foreground
+          while the timer runs.
+        </dd>
+
+        <dt>My frame numbers are off by one compared to another tool</dt>
+        <dd>
+          Tools count from slightly different starting points. Here, frame 0 is the first Pokémon the game can generate after boot,
+          the same as PokeFinder's "advances". Calibration takes care of the difference either way.
+        </dd>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>
+        Made by <strong>Thiago Souza</strong> ·
+        <a href="https://theiagod.com" target="_blank" rel="noopener">theiagod.com</a> ·
+        <a href="https://github.com/thiagobarrado99/shiny-frame-calculator" target="_blank" rel="noopener">Source on GitHub</a>
+      </p>
+      <p class="muted">This tool was built with AI assistance (Claude by Anthropic).</p>
+      <p class="muted small-text">
+        Fan-made tool, not affiliated with or endorsed by Nintendo, Game Freak or The Pokémon Company.
+        Pokémon and Pokémon Emerald are trademarks of their respective owners.
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
