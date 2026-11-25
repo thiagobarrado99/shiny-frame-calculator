@@ -253,6 +253,7 @@ function tone(dest, when, freq, duration, type = 'square', level = 0.5) {
 
 const sounds = {
   tick(dest, t) { tone(dest, t, 1200, 0.07, 'square', 0.35); },
+  resetTick(dest, t) { tone(dest, t, 740, 0.08, 'square', 0.35); },
   hit(dest, t) {
     tone(dest, t, 1760, 0.35, 'square', 0.5);
     tone(dest, t, 880, 0.35, 'triangle', 0.4);
@@ -303,10 +304,37 @@ function retrigger(el, cls) {
   el.classList.add(cls);
 }
 
-function resetTimeline() {
+const finalMarkLabel = timeline.querySelector('.mark.final span');
+
+function resetTimeline(finalLabel = 'A') {
   timeline.classList.remove('active');
   dot.style.left = '0%';
   marks.forEach((m) => m.classList.remove('lit'));
+  finalMarkLabel.textContent = finalLabel;
+  run.lastBeat = null;
+}
+
+/**
+ * Drive the 5-second timeline for the current phase.
+ * Returns true the first time the timeline becomes active in this phase.
+ */
+function updateTimeline(remaining) {
+  if (remaining > 5000) return false;
+  let started = false;
+  if (!timeline.classList.contains('active')) {
+    timeline.classList.add('active');
+    started = true;
+  }
+  dot.style.left = ((1 - remaining / 5000) * 100).toFixed(2) + '%';
+  // Pulse when crossing each whole second (4, 3, 2, 1 seconds left)
+  const beat = Math.ceil(remaining / 1000);
+  if (run.lastBeat !== null && beat < run.lastBeat && beat <= 4) {
+    retrigger(dot, 'beat');
+    const m = marks.find((el) => Number(el.dataset.k) === beat);
+    if (m) m.classList.add('lit');
+  }
+  run.lastBeat = beat;
+  return started;
 }
 
 async function requestWakeLock() {
@@ -352,7 +380,13 @@ function startTimer() {
     const latency = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
     const toAudio = (perfMs) => ctx.currentTime + (perfMs - performance.now()) / 1000 - latency;
 
-    if (pre > 0) sounds.reset(run.bus, Math.max(ctx.currentTime, toAudio(run.resetAt)));
+    if (pre > 0) {
+      for (let k = 4; k >= 1; k--) {
+        const at = run.resetAt - k * 1000;
+        if (at > now + 1) sounds.resetTick(run.bus, toAudio(at));
+      }
+      sounds.reset(run.bus, Math.max(ctx.currentTime, toAudio(run.resetAt)));
+    }
     for (let k = 4; k >= 1; k--) {
       const at = run.hitAt - k * 1000;
       if (at > run.resetAt + 1) sounds.tick(run.bus, toAudio(at));
@@ -361,7 +395,7 @@ function startTimer() {
   }
 
   requestWakeLock();
-  resetTimeline();
+  resetTimeline(pre > 0 ? 'SR' : 'A');
   $('start').disabled = true;
   $('stop').disabled = false;
   $('hit').value = '';
@@ -389,29 +423,24 @@ function tick() {
     if (run.phase !== 'reset') {
       setPhase('reset', 'Get ready to soft reset', 'Soft reset on the beep: Start + Select + A + B');
     }
-    $('clock').textContent = fmtDuration((run.resetAt - now) / 1000, 1);
+    const remaining = run.resetAt - now;
+    $('clock').textContent = fmtDuration(remaining / 1000, 1);
+    if (updateTimeline(remaining)) {
+      $('phase-hint').textContent = 'Follow the dot, then soft reset on the last beep! (Start + Select + A + B)';
+    }
   } else if (now < run.hitAt) {
     if (run.phase !== 'target') {
-      if (run.phase === 'reset') retrigger(timerBox, 'flash-reset');
+      if (run.phase === 'reset') {
+        retrigger(timerBox, 'flash-reset');
+        resetTimeline('A');
+      }
       setPhase('target', 'Waiting for your frame', `Load your save, stand in front of the Pokémon and get ready to press A. Target: frame ${$('target').value}`);
     }
     const remaining = run.hitAt - now;
     $('clock').textContent = fmtDuration(remaining / 1000, 1);
 
-    if (remaining <= 5000) {
-      if (!timeline.classList.contains('active')) {
-        timeline.classList.add('active');
-        $('phase-hint').textContent = 'Follow the dot, then press A on the last beep!';
-      }
-      dot.style.left = ((1 - remaining / 5000) * 100).toFixed(2) + '%';
-      // Pulse when crossing each whole second (4, 3, 2, 1 seconds left)
-      const beat = Math.ceil(remaining / 1000);
-      if (run.lastBeat !== null && beat < run.lastBeat && beat <= 4) {
-        retrigger(dot, 'beat');
-        const m = marks.find((el) => Number(el.dataset.k) === beat);
-        if (m) m.classList.add('lit');
-      }
-      run.lastBeat = beat;
+    if (updateTimeline(remaining)) {
+      $('phase-hint').textContent = 'Follow the dot, then press A on the last beep!';
     }
   } else {
     // Hit!
