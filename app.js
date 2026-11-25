@@ -307,7 +307,7 @@ function retrigger(el, cls) {
 const finalMarkLabel = timeline.querySelector('.mark.final span');
 
 function resetTimeline(finalLabel = 'A') {
-  timeline.classList.remove('active');
+  timeline.classList.remove('active', 'pulsing');
   dot.style.left = '0%';
   marks.forEach((m) => m.classList.remove('lit'));
   finalMarkLabel.textContent = finalLabel;
@@ -326,9 +326,10 @@ function updateTimeline(remaining) {
     started = true;
   }
   dot.style.left = ((1 - remaining / 5000) * 100).toFixed(2) + '%';
-  // Pulse when crossing each whole second (4, 3, 2, 1 seconds left)
+  // Last 4 seconds: the dot pulses continuously and beats on each second (3, 2, 1 left)
+  timeline.classList.toggle('pulsing', remaining <= 4000);
   const beat = Math.ceil(remaining / 1000);
-  if (run.lastBeat !== null && beat < run.lastBeat && beat <= 4) {
+  if (run.lastBeat !== null && beat < run.lastBeat && beat <= 3) {
     retrigger(dot, 'beat');
     const m = marks.find((el) => Number(el.dataset.k) === beat);
     if (m) m.classList.add('lit');
@@ -381,13 +382,13 @@ function startTimer() {
     const toAudio = (perfMs) => ctx.currentTime + (perfMs - performance.now()) / 1000 - latency;
 
     if (pre > 0) {
-      for (let k = 4; k >= 1; k--) {
+      for (let k = 3; k >= 1; k--) {
         const at = run.resetAt - k * 1000;
         if (at > now + 1) sounds.resetTick(run.bus, toAudio(at));
       }
       sounds.reset(run.bus, Math.max(ctx.currentTime, toAudio(run.resetAt)));
     }
-    for (let k = 4; k >= 1; k--) {
+    for (let k = 3; k >= 1; k--) {
       const at = run.hitAt - k * 1000;
       if (at > run.resetAt + 1) sounds.tick(run.bus, toAudio(at));
     }
