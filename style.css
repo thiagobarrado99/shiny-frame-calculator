@@ -43,7 +43,8 @@ kbd {
 .site-header { padding: 42px 0 18px; text-align: center; }
 .site-header h1 { margin: 0 0 6px; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -.02em; }
 .sparkle { display: inline-block; animation: twinkle 2.4s ease-in-out infinite; }
-.tagline { margin: 0 auto; max-width: 640px; color: var(--muted); }
+.subtitle { margin: 0 0 10px; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.tagline { margin: 0 auto; max-width: 680px; color: var(--muted); }
 
 @keyframes twinkle {
   0%, 100% { transform: scale(1) rotate(0); opacity: 1; }

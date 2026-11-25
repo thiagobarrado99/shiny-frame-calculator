@@ -3,24 +3,66 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shiny Frame Calculator · Pokémon Emerald</title>
-  <meta name="description" content="Find shiny frames for Pokémon Emerald from your TID and SID, then hit them with a soft-reset timer that has audio and visual cues.">
+  <title>Gen 3 Shiny Frame Calculator &amp; RNG Timer for Pokémon Emerald</title>
+  <meta name="description" content="Free Gen 3 shiny frame calculator for Pokémon Emerald. Enter your TID and SID to find every shiny frame with nature and IVs, then hit it with a soft-reset RNG timer with audio and visual cues.">
+  <meta name="keywords" content="gen 3 shiny frame calculator, pokemon emerald shiny frame calculator, emerald rng manipulation, emerald rng timer, shiny legendary emerald, TID SID shiny, method 1 shiny frames, shiny Rayquaza, shiny Kyogre, shiny Groudon">
   <meta name="author" content="Thiago Souza">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0e1120">
+  <link rel="canonical" href="https://thiagobarrado99.github.io/shiny-frame-calculator/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Shiny Frame Calculator">
+  <meta property="og:title" content="Gen 3 Shiny Frame Calculator &amp; RNG Timer (Pokémon Emerald)">
+  <meta property="og:description" content="Find your shiny frames from your TID and SID, then hit them with a soft-reset timer. Free, runs in your browser.">
+  <meta property="og:url" content="https://thiagobarrado99.github.io/shiny-frame-calculator/">
+  <meta property="og:image" content="https://thiagobarrado99.github.io/shiny-frame-calculator/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Gen 3 Shiny Frame Calculator and RNG timer for Pokémon Emerald">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gen 3 Shiny Frame Calculator &amp; RNG Timer (Pokémon Emerald)">
+  <meta name="twitter:description" content="Find your shiny frames from your TID and SID, then hit them with a soft-reset timer.">
+  <meta name="twitter:image" content="https://thiagobarrado99.github.io/shiny-frame-calculator/og-image.png">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Gen 3 Shiny Frame Calculator & RNG Timer",
+    "alternateName": ["Pokémon Emerald Shiny Frame Calculator", "Emerald RNG Timer"],
+    "url": "https://thiagobarrado99.github.io/shiny-frame-calculator/",
+    "description": "Find every shiny frame for your Pokémon Emerald save from your Trainer ID (TID) and Secret ID (SID), with nature and IVs, then hit the frame with a two-stage soft-reset timer.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any (web browser)",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "Thiago Souza", "url": "https://theiagod.com" },
+    "keywords": "gen 3 shiny frame calculator, pokemon emerald rng, shiny frames, TID SID, RNG timer, method 1"
+  }
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
-      <h1><span class="sparkle" aria-hidden="true">✨</span> Shiny Frame Calculator</h1>
-      <p class="tagline">For Pokémon Emerald. Enter your Trainer ID and Secret ID, pick a shiny frame, and the timer tells you exactly when to press A.</p>
+      <h1><span class="sparkle" aria-hidden="true">✨</span> Gen 3 Shiny Frame Calculator</h1>
+      <p class="subtitle">Shiny frame finder and RNG timer for Pokémon Emerald</p>
+      <p class="tagline">Enter your Trainer ID (TID) and Secret ID (SID) to see every shiny frame with its nature and IVs.
+        Then the soft-reset timer tells you exactly when to press A to catch a shiny legendary, starter or gift Pokémon.
+        Free, no download, runs in your browser.</p>
     </div>
   </header>
 
   <main class="wrap">
 
     <section class="card intro">
-      <h2>How it works</h2>
+      <h2>How Gen 3 shiny RNG manipulation works</h2>
       <p>
         Emerald's random number generator starts from the same seed every time the game is turned on, then advances once per frame
         (about 59.73 times a second). Each frame therefore always produces the same Pokémon. Whether that Pokémon is shiny depends only
@@ -183,6 +225,26 @@
           Hoenn starters and gift Pokémon. Event-island Pokémon (Mew, Deoxys, Lugia, Ho-Oh) work the same way if you have the tickets.
           <strong>Wild encounters are not supported</strong> because they use a different method ("Method H") that also depends on the
           encounter slot. Roaming Latias/Latios are decided when the roamer is created, not when you meet it.
+        </dd>
+
+        <dt>Can I get a shiny legendary in Pokémon Emerald with this?</dt>
+        <dd>
+          Yes. Kyogre, Groudon, Rayquaza, Regirock, Regice and Registeel are all stationary Method 1 encounters, so you can pick a
+          shiny frame here and time it with the RNG timer. The same goes for your starter (Treecko, Torchic or Mudkip)
+          and gift Pokémon such as Beldum or the fossils.
+        </dd>
+
+        <dt>Does it work for Ruby, Sapphire, FireRed and LeafGreen?</dt>
+        <dd>
+          It's made for <strong>Pokémon Emerald</strong>, which always starts its RNG from seed 0. Ruby and Sapphire work only when the
+          cartridge's internal clock battery has run dry: set the initial seed to <code>5A0</code> under Advanced. With a working battery,
+          and in FireRed and LeafGreen, the starting seed changes from boot to boot, so a fixed frame list doesn't apply.
+        </dd>
+
+        <dt>Is this cheating? Does it change my game?</dt>
+        <dd>
+          No. Nothing is modified and no cheat codes are used. RNG manipulation only uses timing: you press A on the exact frame that
+          the game's own random number generator produces a shiny. The Pokémon is fully legitimate.
         </dd>
 
         <dt>Where do I get my SID?</dt>

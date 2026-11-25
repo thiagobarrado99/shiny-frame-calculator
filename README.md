@@ -1,6 +1,6 @@
-# ✨ Shiny Frame Calculator (Pokémon Emerald)
+# ✨ Gen 3 Shiny Frame Calculator & RNG Timer (Pokémon Emerald)
 
-A small web tool that lists the shiny frames for your Pokémon Emerald save and gives you a soft-reset timer to hit them.
+A free **Gen 3 shiny frame calculator** and **RNG timer** for **Pokémon Emerald**. Enter your Trainer ID (TID) and Secret ID (SID) to list every shiny frame with its nature and IVs. Then use the soft-reset timer to hit that frame and catch a shiny legendary (Rayquaza, Kyogre, Groudon, the Regis), starter or gift Pokémon through RNG manipulation.
 
 **Use it here:** https://thiagobarrado99.github.io/shiny-frame-calculator/
 
@@ -13,6 +13,12 @@ A small web tool that lists the shiny frames for your Pokémon Emerald save and 
 - **Audio and visual cues** for the last seconds of both countdowns. A dot moves along a 5-second timeline, pulses on each second and plays a tick, then a final beep tells you when to press A. Sounds are scheduled with the Web Audio API so the timing stays accurate.
 - **Calibration.** Missed the frame? Pick the frame you actually got from the nearby-frames list and the timer corrects itself for your next try.
 - Your inputs are saved in your browser, so they're still there next time.
+
+## Supported games and encounters
+
+- **Pokémon Emerald:** stationary and gift encounters (Method 1, plus Methods 2 and 4).
+- **Ruby/Sapphire:** only when the internal clock battery is dry (initial seed `5A0`).
+- Not supported: wild encounters (Method H), FireRed/LeafGreen, Ruby/Sapphire with a working battery.
 
 ## How it works
 
